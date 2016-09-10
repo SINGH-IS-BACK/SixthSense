@@ -21,7 +21,7 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final Map<String, List<String>> PLACES_BY_BEACONS;
+    private static final Map<String, List<String>> ROUTES_BY_BEACONS;
     TextView textView;
 
     static {
@@ -38,13 +38,13 @@ public class MainActivity extends AppCompatActivity {
         routesByBeacons.put("1:1003", new ArrayList<String>() {{
             add("Go to 4");
         }});
-        PLACES_BY_BEACONS = Collections.unmodifiableMap(routesByBeacons);
+        ROUTES_BY_BEACONS = Collections.unmodifiableMap(routesByBeacons);
     }
 
     private List<String> placesNearBeacon(Beacon beacon) {
         String beaconKey = String.format("%d:%d", beacon.getMajor(), beacon.getMinor());
-        if (PLACES_BY_BEACONS.containsKey(beaconKey)) {
-            return PLACES_BY_BEACONS.get(beaconKey);
+        if (ROUTES_BY_BEACONS.containsKey(beaconKey)) {
+            return ROUTES_BY_BEACONS.get(beaconKey);
         }
         return Collections.emptyList();
     }
