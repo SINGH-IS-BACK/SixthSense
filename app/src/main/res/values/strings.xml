@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SixthSense</string>
+    <string name="title_activity_get_direction">GetDirection</string>
 </resources>
