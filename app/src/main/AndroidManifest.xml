@@ -10,11 +10,11 @@
         android:theme="@style/AppTheme">
         <uses-permission android:name="android.permission.INTERNET" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".activity.MainActivity">
 
         </activity>
         <activity
-            android:name=".GetDirectionActivity"
+            android:name=".activity.GetDirectionActivity"
             android:label="@string/title_activity_get_direction"
             android:theme="@style/AppTheme.NoActionBar">
 

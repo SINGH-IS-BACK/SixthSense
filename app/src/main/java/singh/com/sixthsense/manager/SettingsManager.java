@@ -1,4 +1,4 @@
-package singh.com.sixthsense;
+package singh.com.sixthsense.manager;
 
 import android.content.Context;
 import android.content.SharedPreferences;

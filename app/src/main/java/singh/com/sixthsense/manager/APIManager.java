@@ -24,7 +24,7 @@ public interface APIManager {
 
     @GET("/SixthSense/beacon/destinations")
     Call<DestinationResponse> getLocations(
-            @Query("beaconUuid") String beaconUuid,
+            @Query("sourceBeaconUuid") String beaconUuid,
             @Query("minor") int minor,
             @Query("major") int major
     );

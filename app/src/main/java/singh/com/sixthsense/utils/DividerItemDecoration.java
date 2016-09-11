@@ -1,4 +1,4 @@
-package singh.com.sixthsense;
+package singh.com.sixthsense.utils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
