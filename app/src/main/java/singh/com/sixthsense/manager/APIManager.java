@@ -14,11 +14,12 @@ import singh.com.sixthsense.model.ServerResponse;
 
 public interface APIManager {
 
-    @GET("/SixthSense/beacon/info")
-    Call<ServerResponse> getNextLocation(
-            @Query("beaconId") String beaconId,
-            @Query("currentLocation") int currentLocation,
-            @Query("finalLocation") int finalLocation
+    @GET("/SixthSense/route/user")
+    Call<ServerResponse> getUserRoute(
+            @Query("sourceBeaconUuid") String sourceBeaconUuid,
+            @Query("minor") int minor,
+            @Query("major") int major,
+            @Query("destinationBeaconId") String destinationBeaconId
     );
 
     @GET("/SixthSense/beacon/destinations")

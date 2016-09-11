@@ -1,13 +1,17 @@
 package singh.com.sixthsense;
 
+import android.content.Context;
+import android.opengl.Visibility;
 import android.speech.tts.TextToSpeech;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -15,11 +19,8 @@ import com.estimote.sdk.Region;
 import com.estimote.sdk.SystemRequirementsChecker;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 
 import okhttp3.OkHttpClient;
@@ -30,40 +31,26 @@ import retrofit2.GsonConverterFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import singh.com.sixthsense.manager.APIManager;
+import singh.com.sixthsense.model.Checkpoint;
 import singh.com.sixthsense.model.ServerResponse;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final Map<String, List<String>> ROUTES_BY_BEACONS;
-    TextView textView;
+    //private static final Map<String, List<String>> ROUTES_BY_BEACONS;
+    TextView currentLocationTV;
+    TextView messageTV;
+    TextView finalLocationTV;
     int previousLocation = 0;
     TextToSpeech t1;
+    Context mContext;
+    int pointerCurrentLocation = 0;
+    ArrayList<Checkpoint> mCheckpoints = new ArrayList<>();
+
+    protected RecyclerView.Adapter adapter;
+    protected RecyclerView mRecyclerView;
+    TextView empty;
+
     private static final String API_URL = "http://54.69.39.220:8082/";
-
-    static {
-        Map<String, List<String>> routesByBeacons = new HashMap<>();
-
-        //hardcoded values for temporary purpose
-        routesByBeacons.put("1:1001", new ArrayList<String>() {{
-            add("Go to 2");
-        }});
-        routesByBeacons.put("1:1002", new ArrayList<String>() {{
-            add("Go to 3");
-            add("Warning");
-        }});
-        routesByBeacons.put("1:1003", new ArrayList<String>() {{
-            add("Go to 4");
-        }});
-        ROUTES_BY_BEACONS = Collections.unmodifiableMap(routesByBeacons);
-    }
-
-    private List<String> placesNearBeacon(Beacon beacon) {
-        String beaconKey = String.format("%d:%d", beacon.getMajor(), beacon.getMinor());
-        if (ROUTES_BY_BEACONS.containsKey(beaconKey)) {
-            return ROUTES_BY_BEACONS.get(beaconKey);
-        }
-        return Collections.emptyList();
-    }
 
     private BeaconManager beaconManager;
     private com.estimote.sdk.Region region;
@@ -72,8 +59,40 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textView = (TextView) findViewById(R.id.text);
+        mContext = this;
+        currentLocationTV = (TextView) findViewById(R.id.currentLocation);
+        messageTV = (TextView) findViewById(R.id.message);
+        finalLocationTV = (TextView) findViewById(R.id.finalDestination);
         beaconManager = new BeaconManager(this);
+
+
+        
+
+
+
+        FloatingActionButton clear = (FloatingActionButton) findViewById(R.id.clear);
+        clear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.location_list);
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        //layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        //mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
+        mRecyclerView.setLayoutManager(layoutManager);
+
+        empty = (TextView) findViewById(R.id.search_empty);
+        empty.setVisibility(View.VISIBLE);
+
+
+        final String finalLocation = SettingsManager.getInstance(this).getFinalLocation();
+        if(finalLocation.isEmpty()){
+            finish();
+        }
+        finalLocationTV.setText(finalLocation);
 
         t1=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
@@ -91,11 +110,27 @@ public class MainActivity extends AppCompatActivity {
                     Beacon nearestBeacon = list.get(0);
 
                     final int currentLocation = nearestBeacon.getMinor();
+                    final String currentUUID = nearestBeacon.toString();
 
                     if(currentLocation == previousLocation){
 
                     }else {
-                        textView.setText("Current Location : " + currentLocation);
+                        previousLocation = currentLocation;
+                        currentLocationTV.setText("Current Location : " + currentLocation);
+
+                        if((mCheckpoints.size() > pointerCurrentLocation)){
+                            if(mCheckpoints.get(pointerCurrentLocation).getDestination().getId().equals(finalLocation)){
+                                t1.speak("Final location reached", TextToSpeech.QUEUE_FLUSH, null);
+                                return;
+                            }
+                            else if(mCheckpoints.size() > pointerCurrentLocation+1 && mCheckpoints.get(pointerCurrentLocation+1).getSource().getMinor() == currentLocation){
+                                adapter = new CheckpointRecyclerAdapter(mContext, mCheckpoints, 22);//currentLocation);
+                                //mRecyclerView.setAdapter(adapter);
+                                t1.speak(mCheckpoints.get(pointerCurrentLocation+1).getVoiceText(), TextToSpeech.QUEUE_FLUSH, null);
+                                return;
+                            }
+                        }
+
 
                         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
                         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -110,24 +145,37 @@ public class MainActivity extends AppCompatActivity {
 
                         APIManager service = retrofit.create(APIManager.class);
 
-                        Call<ServerResponse> call = service.getNextLocation("asd", currentLocation, 1008);
+                        Call<ServerResponse> call = service.getUserRoute("asd", 1, currentLocation, finalLocation);
                         call.enqueue(new Callback<ServerResponse>() {
                             @Override
                             public void onResponse(Call<ServerResponse> call, Response<ServerResponse> response) {
                                 // handle success
-                                String nextMessage = response.body().getMessage();
+                                ArrayList<Checkpoint> route = response.body().getRoute();
+                                mCheckpoints = route;
+                                empty.setVisibility(View.GONE);
+                                String nextMessage = "";
+                                if(route.size() == 0){
+                                    nextMessage = "Final Location Reached";
+                                    return;
+                                }else {
+                                    nextMessage = route.get(0).getVoiceText();
+                                }
                                 String str = "Currently at   " + currentLocation + "   next location " + nextMessage;
-                                textView.setText(str);
+                                currentLocationTV.setText(nextMessage + "//  " + currentUUID);
+                                messageTV.setText(str);
+                                adapter = new CheckpointRecyclerAdapter(mContext, route, 22);//currentLocation);
+                                mRecyclerView.setAdapter(adapter);
+
                                 t1.speak(str, TextToSpeech.QUEUE_FLUSH, null);
                             }
 
                             @Override
                             public void onFailure(Call<ServerResponse> call, Throwable t) {
                                 // handle failure
-                                textView.setText("Failed to retrieve Final Location");
+                                currentLocationTV.setText("Failed to retrieve Final Location");
                             }
                         });
-                        previousLocation = currentLocation;
+
                     }
 
                 }

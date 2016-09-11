@@ -3,11 +3,11 @@ package singh.com.sixthsense.model;
 /**
  * Created by kthethi on 11/09/16.
  */
-public class Beacon {
+public class EstimoteBeacon {
 
     String uuid;
-    String major;
-    String minor;
+    int major;
+    int minor;
     String id;
     String location;
 
@@ -19,19 +19,19 @@ public class Beacon {
         this.uuid = uuid;
     }
 
-    public String getMajor() {
+    public int getMajor() {
         return major;
     }
 
-    public void setMajor(String major) {
+    public void setMajor(int major) {
         this.major = major;
     }
 
-    public String getMinor() {
+    public int getMinor() {
         return minor;
     }
 
-    public void setMinor(String minor) {
+    public void setMinor(int minor) {
         this.minor = minor;
     }
 

@@ -7,25 +7,25 @@ import java.util.ArrayList;
  */
 public class DestinationResponse {
 
-    Beacon source;
-    ArrayList<Beacon> destinations;
+    EstimoteBeacon source;
+    ArrayList<EstimoteBeacon> destinations;
     String status;
     String code;
     String message;
 
-    public Beacon getSource() {
+    public EstimoteBeacon getSource() {
         return source;
     }
 
-    public void setSource(Beacon source) {
+    public void setSource(EstimoteBeacon source) {
         this.source = source;
     }
 
-    public ArrayList<Beacon> getDestinations() {
+    public ArrayList<EstimoteBeacon> getDestinations() {
         return destinations;
     }
 
-    public void setDestinations(ArrayList<Beacon> destinations) {
+    public void setDestinations(ArrayList<EstimoteBeacon> destinations) {
         this.destinations = destinations;
     }
 

@@ -1,8 +1,8 @@
 package singh.com.sixthsense;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -12,7 +12,6 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
@@ -25,13 +24,12 @@ import retrofit2.GsonConverterFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import singh.com.sixthsense.manager.APIManager;
-import singh.com.sixthsense.model.Beacon;
+import singh.com.sixthsense.model.EstimoteBeacon;
 import singh.com.sixthsense.model.DestinationResponse;
-import singh.com.sixthsense.model.ServerResponse;
 
 public class GetDirectionActivity extends AppCompatActivity {
 
-    ArrayList<Beacon> mDestinations = new ArrayList<Beacon>();
+    ArrayList<EstimoteBeacon> mDestinations = new ArrayList<EstimoteBeacon>();
     ArrayAdapter<String> mDestinationAdapter;
     AutoCompleteTextView actv;
     private static final String API_URL = "http://54.69.39.220:8082/";
@@ -41,18 +39,7 @@ public class GetDirectionActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_get_direction);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         mContext = this;
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
 
         mDestinationAdapter = new ArrayAdapter<String>
                 (this, R.layout.destination_item, new ArrayList<String>());
@@ -100,7 +87,7 @@ public class GetDirectionActivity extends AppCompatActivity {
             }
         });
 
-        TextView submit = (TextView) findViewById(R.id.submit);
+        FloatingActionButton submit = (FloatingActionButton) findViewById(R.id.submit);
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,6 +96,9 @@ public class GetDirectionActivity extends AppCompatActivity {
                 for (int i = 0; i < mDestinations.size(); i++) {
                     if (mDestinations.get(i).getLocation().equals(destination)) {
                         finalId = mDestinations.get(i).getId();
+                        SettingsManager.getInstance(mContext).setFinalLocation(finalId);
+                        Intent intent = new Intent(mContext, MainActivity.class);
+                        startActivity(intent);
                     }
                     else{
                         finalId = "";
